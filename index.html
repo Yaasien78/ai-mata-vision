@@ -30,7 +30,7 @@
   <div class="frame"><video id="video" autoplay muted playsinline></video></div>
   <div id="result">Memuat AI... Tunggu 10 detik</div>
 
-  <script>
+<script>
     const video = document.getElementById('video');
     const result = document.getElementById('result');
     const btnSenter = document.getElementById('btnSenter');
@@ -44,4 +44,64 @@
       "table": "meja", "cell phone": "hp", "laptop": "laptop", "book": "buku",
       "potted plant": "tanaman", "tv": "tv", "cup": "gelas"
     };
-    function terjemahkan(nama) { return kamusID
+    function terjemahkan(nama) { return kamusID[nama] || nama; }
+
+    async function setupCamera() {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        video.srcObject = stream;
+        track = stream.getVideoTracks()[0];
+        result.innerText = "Kamera Aktif. Arahkan ke objek";
+        return new Promise(resolve => video.onloadedmetadata = resolve);
+      } catch(err) {
+        result.innerText = "GAGAL BUKA KAMERA";
+        alert("Izinkan akses kamera dulu bro");
+      }
+    }
+
+    async function toggleTorch() {
+      if (!track ||!track.getCapabilities().torch) { alert("Senter otomatis ga support di HP ini"); return; }
+      senterNyala =!senterNyala;
+      await track.applyConstraints({ advanced: [{ torch: senterNyala }] });
+      btnSenter.innerText = senterNyala? "💡 Matikan Senter" : "💡 Nyalain Senter";
+      btnSenter.classList.toggle("mati");
+    }
+
+    function speak(text) {
+      if (text === lastSpoken) return;
+      lastSpoken = text;
+      const speech = new SpeechSynthesisUtterance(text);
+      speech.lang = 'id-ID';
+      window.speechSynthesis.speak(speech);
+    }
+
+    async function detect() {
+      const predictions = await model.detect(video);
+      if (predictions.length > 0) {
+        const namaID = terjemahkan(predictions[0].class);
+        result.innerText = `Terdeteksi: ${namaID}`;
+        speak(`Terdeteksi ${namaID}`);
+      } else { result.innerText = "Tidak ada objek terdeteksi"; }
+    }
+
+    async function main() {
+      await setupCamera();
+      model = await cocoSsd.load();
+      result.innerText = "AI Siap. Arahkan Kamera";
+      setInterval(detect, 2000);
+    }
+    main();
+
+    // KODE TOMBOL INSTAL
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('installBtn').style.display = 'block';
+    });
+    document.getElementById('installBtn').addEventListener('click', () => {
+      deferredPrompt.prompt();
+    });
+</script>
+</body>
+  </html>
