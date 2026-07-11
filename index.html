@@ -5,8 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI MATA VISION</title>
   <meta name="theme-color" content="#00ff88">
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="logo-192.png">
+  
   <link rel="manifest" href="manifest.json">
 <link rel="icon" href="logo-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -96,8 +95,7 @@
     }
     main();
 
-    // KODE TOMBOL INSTAL VERSI PAKSA
-let deferredPrompt;
+  let deferredPrompt;
 const installBtn = document.getElementById('installBtn');
 
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -111,13 +109,19 @@ installBtn.addEventListener('click', async () => {
   if (deferredPrompt) {
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    console.log(outcome);
     if (outcome === 'accepted') installBtn.style.display = 'none';
     deferredPrompt = null;
   } else {
-    alert("Chrome ga ngedukung instal otomatis.\n\nCara manual: Titik 3 > Instal aplikasi");
+    alert("Cara manual: Titik 3 Chrome > Instal aplikasi");
   }
 });
+
+// DAFTAR SERVICE WORKER - INI WAJIB
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js')
+  .then(() => console.log('SW terdaftar'));
+}
 </script>
 </body>
-  </html>
+</html>
+
