@@ -3,20 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI MATA VISION ID</title>
+  <title>AI MATA VISION</title>
   <meta name="theme-color" content="#00ff88">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="logo.png">
-  <link rel="apple-touch-icon" href="logo.png">
   <style>
     body { text-align: center; background: #000; color: #fff; font-family: sans-serif; margin:0; padding: 20px; }
-  .logo { width: 80px; height: 80px; margin: 10px auto; background: #00ff88; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 40px; }
-  .frame { border: 3px solid #00ff88; border-radius: 20px; padding: 15px; display: inline-block; background: #111; }
+    .logo { width: 80px; height: 80px; margin: 10px auto; background: #00ff88; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 40px; }
+    .frame { border: 3px solid #00ff88; border-radius: 20px; padding: 15px; display: inline-block; background: #111; }
     video { width: 90%; max-width: 600px; border-radius: 12px; }
     #result { font-size: 24px; margin-top: 20px; color: #00ff88; font-weight: bold; }
-    button { padding: 14px 24px; margin: 10px; background: #00ff88; border: none; border-radius: 12px; color: #000; font-weight: bold; font-size: 16px; cursor: pointer; }
+    button { padding: 14px 24px; margin: 10px; background: #00ff88; border: none; border-radius: 12px; color: #000; font-weight: bold; font-size: 16px; }
     button.mati { background: #ff4444; color: #fff; }
-    #installBtn { display: none; background: #0088ff; color: #fff; }
+    #installBtn { display: none; background: #0088ff; color: #fff; } /* tombol instal disembunyiin dulu */
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
@@ -25,6 +24,7 @@
   <div class="logo">👁️</div>
   <h1>AI MATA VISION</h1>
   <button id="installBtn">📲 Instal Aplikasi</button>
+
   <p>Arahkan kamera ke Benda, Hewan, atau Tumbuhan</p>
   <button id="btnSenter" onclick="toggleTorch()">💡 Nyalain Senter</button>
   <div class="frame"><video id="video" autoplay muted playsinline></video></div>
@@ -44,58 +44,4 @@
       "table": "meja", "cell phone": "hp", "laptop": "laptop", "book": "buku",
       "potted plant": "tanaman", "tv": "tv", "cup": "gelas"
     };
-    function terjemahkan(nama) { return kamusID[nama] || nama; }
-
-    async function setupCamera() {
-      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-      video.srcObject = stream;
-      track = stream.getVideoTracks()[0];
-      return new Promise(resolve => video.onloadedmetadata = resolve);
-    }
-
-    async function toggleTorch() {
-      if (!track ||!track.getCapabilities().torch) { alert("HP kamu ga support senter otomatis bro"); return; }
-      senterNyala =!senterNyala;
-      await track.applyConstraints({ advanced: [{ torch: senterNyala }] });
-      btnSenter.innerText = senterNyala? "💡 Matikan Senter" : "💡 Nyalain Senter";
-      btnSenter.classList.toggle("mati");
-    }
-
-    function speak(text) {
-      if (text === lastSpoken) return;
-      lastSpoken = text;
-      const speech = new SpeechSynthesisUtterance(text);
-      speech.lang = 'id-ID';
-      window.speechSynthesis.speak(speech);
-    }
-
-    async function detect() {
-      const predictions = await model.detect(video);
-      if (predictions.length > 0) {
-        const namaID = terjemahkan(predictions[0].class);
-        result.innerText = `Terdeteksi: ${namaID}`;
-        speak(`Terdeteksi ${namaID}`);
-      } else { result.innerText = "Tidak ada objek terdeteksi"; }
-    }
-
-    async function main() {
-      await setupCamera();
-      model = await cocoSsd.load();
-      result.innerText = "AI Siap. Arahkan Kamera";
-      setInterval(detect, 2000);
-    }
-    main();
-
-    // TOMBOL INSTAL APLIKASI
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      document.getElementById('installBtn').style.display = 'block';
-    });
-    document.getElementById('installBtn').addEventListener('click', () => {
-      deferredPrompt.prompt();
-    });
-  </script>
-</body>
-</html>
+    function terjemahkan(nama) { return kamusID
