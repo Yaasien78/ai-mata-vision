@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>AI MATA VISION</title>
+  <style>
+    body { text-align: center; background: #111; color: #fff; font-family: sans-serif; }
+    video { width: 90%; max-width: 600px; border: 3px solid #00ff88; border-radius: 12px; }
+    #result { font-size: 20px; margin-top: 15px; color: #00ff88; }
+   .center-box { position: absolute; width: 200px; height: 200px; border: 2px dashed yellow; top: 50%; left: 50%; transform: translate(-50%,-50%); }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+</head>
+<body>
+  <h1>👁️ AI MATA VISION</h1>
+  <p>Arahkan kamera ke Benda, Hewan, atau Tumbuhan</p>
+  <div style="position:relative; display:inline-block;">
+    <video id="video" autoplay muted playsinline></video>
+    <div class="center-box"></div>
+  </div>
+  <div id="result">Memuat AI...</div>
+
+  <script>
+    const video = document.getElementById('video');
+    const result = document.getElementById('result');
+    let model;
+    let lastSpoken = "";
+
+    // 1. Nyalakan Kamera
+    async function setupCamera() {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      video.srcObject = stream;
+      return new Promise(resolve => video.onloadedmetadata = resolve);
+    }
+
+    // 2. Fungsi Ngomong
+    function speak(text) {
+      if (text === lastSpoken) return; // biar ga ngulang2
+      lastSpoken = text;
+      const speech = new SpeechSynthesisUtterance(text);
+      speech.lang = 'id-ID';
+      window.speechSynthesis.speak(speech);
+    }
+
+    // 3. Deteksi
+    async function detect() {
+      const predictions = await model.detect(video);
+      if (predictions.length > 0) {
+        // Ambil objek yg paling besar / paling tengah
+        const obj = predictions[0];
+        const name = obj.class;
+        const score = (obj.score * 100).toFixed(0);
+        result.innerText = `Terdeteksi: ${name} - Akurasi: ${score}%`;
+        speak(`Terdeteksi ${name}`);
+      } else {
+        result.innerText = "Arahkan ke benda, hewan, atau tumbuhan";
+      }
+    }
+
+    // 4. Jalanin Semua
+    async function main() {
+      await setupCamera();
+      model = await cocoSsd.load();
+      result.innerText = "AI Siap. Arahkan Kamera";
+      setInterval(detect, 2000); // scan tiap 2 detik
+    }
+    main();
+  </script>
+</body>
+  </html>
