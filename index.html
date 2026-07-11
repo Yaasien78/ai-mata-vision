@@ -2,31 +2,44 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>AI MATA VISION V2</title>
+  <title>AI MATA VISION ID</title>
   <style>
-    body { text-align: center; background: #111; color: #fff; font-family: sans-serif; }
+    body { text-align: center; background: #000; color: #fff; font-family: sans-serif; padding: 20px; }
     video { width: 90%; max-width: 600px; border: 3px solid #00ff88; border-radius: 12px; }
-    #result { font-size: 20px; margin-top: 15px; color: #00ff88; }
-   .center-box { position: absolute; width: 200px; height: 200px; border: 2px dashed yellow; top: 50%; left: 50%; transform: translate(-50%,-50%); }
-    button { padding: 10px 20px; margin: 10px; background: #00ff88; border: none; border-radius: 8px; color: #111; font-weight: bold; }
+    #result { font-size: 24px; margin-top: 20px; color: #00ff88; font-weight: bold; }
+    button { padding: 12px 20px; margin: 10px; background: #00ff88; border: none; border-radius: 8px; color: #000; font-weight: bold; font-size: 16px; }
+    button.mati { background: #ff4444; color: #fff; } /* tombol pas senter mati */
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
 </head>
 <body>
-  <h1>👁️ AI MATA VISION V2</h1>
-  <button onclick="toggleTorch()">💡 Nyalain Senter</button>
-  <div style="position:relative; display:inline-block;">
+  <h1>👁️ AI MATA VISION</h1>
+  <p>Arahkan kamera ke Benda, Hewan, atau Tumbuhan</p>
+  <button id="btnSenter" onclick="toggleTorch()">💡 Nyalain Senter</button>
+  <div>
     <video id="video" autoplay muted playsinline></video>
-    <div class="center-box"></div>
   </div>
   <div id="result">Memuat AI... Tunggu 10 detik</div>
 
   <script>
     const video = document.getElementById('video');
     const result = document.getElementById('result');
+    const btnSenter = document.getElementById('btnSenter');
     let model, stream, track;
     let lastSpoken = "";
+    let senterNyala = false; // status senter
+
+    const kamusID = {
+      "person": "orang", "bicycle": "sepeda", "car": "mobil", "motorcycle": "motor",
+      "dog": "anjing", "cat": "kucing", "bird": "burung", "bottle": "botol",
+      "chair": "kursi", "table": "meja", "cell phone": "hp", "laptop": "laptop",
+      "book": "buku", "potted plant": "tanaman", "tv": "tv", "cup": "gelas"
+    };
+
+    function terjemahkan(nama) {
+      return kamusID[nama] || nama;
+    }
 
     async function setupCamera() {
       stream = await navigator.mediaDevices.getUserMedia({
@@ -37,11 +50,25 @@
       return new Promise(resolve => video.onloadedmetadata = resolve);
     }
 
-    function toggleTorch() {
-      if (track && track.getCapabilities().torch) {
-        track.applyConstraints({ advanced: [{torch: true}] });
-      } else {
+    async function toggleTorch() {
+      if (!track ||!track.getCapabilities().torch) {
         alert("HP kamu ga support senter otomatis bro");
+        return;
+      }
+
+      senterNyala =!senterNyala; // bolak balik true/false
+
+      await track.applyConstraints({
+        advanced: [{ torch: senterNyala }]
+      });
+
+      // Ganti tulisan tombol
+      if (senterNyala) {
+        btnSenter.innerText = "💡 Matikan Senter";
+        btnSenter.classList.add("mati");
+      } else {
+        btnSenter.innerText = "💡 Nyalain Senter";
+        btnSenter.classList.remove("mati");
       }
     }
 
@@ -50,6 +77,7 @@
       lastSpoken = text;
       const speech = new SpeechSynthesisUtterance(text);
       speech.lang = 'id-ID';
+      speech.rate = 0.9;
       window.speechSynthesis.speak(speech);
     }
 
@@ -57,18 +85,18 @@
       const predictions = await model.detect(video);
       if (predictions.length > 0) {
         const obj = predictions[0];
-        const name = obj.class;
+        const namaID = terjemahkan(obj.class);
         const score = (obj.score * 100).toFixed(0);
-        result.innerText = `Terdeteksi: ${name} - Akurasi: ${score}%`;
-        speak(`Terdeteksi ${name}`);
+        result.innerText = `Terdeteksi: ${namaID} - Akurasi: ${score}%`;
+        speak(`Terdeteksi ${namaID}`);
       } else {
-        result.innerText = "Arahkan ke benda, hewan, atau tumbuhan";
+        result.innerText = "Tidak ada objek terdeteksi";
       }
     }
 
     async function main() {
       await setupCamera();
-      result.innerText = "Download AI... 10 detik";
+      result.innerText = "Download AI... Mohon tunggu";
       model = await cocoSsd.load();
       result.innerText = "AI Siap. Arahkan Kamera";
       setInterval(detect, 2000);
