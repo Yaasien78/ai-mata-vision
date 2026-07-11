@@ -29,8 +29,9 @@
 
     // 1. Nyalakan Kamera
     async function setupCamera() {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      video.srcObject = stream;
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+  video: { facingMode: "environment" } 
+});
       return new Promise(resolve => video.onloadedmetadata = resolve);
     }
 
