@@ -92,16 +92,28 @@
     }
     main();
 
-    // KODE TOMBOL INSTAL
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      document.getElementById('installBtn').style.display = 'block';
-    });
-    document.getElementById('installBtn').addEventListener('click', () => {
-      deferredPrompt.prompt();
-    });
+    // KODE TOMBOL INSTAL VERSI PAKSA
+let deferredPrompt;
+const installBtn = document.getElementById('installBtn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  installBtn.style.display = 'block'; // munculin tombol biru
+  console.log("PWA siap diinstal");
+});
+
+installBtn.addEventListener('click', async () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(outcome);
+    if (outcome === 'accepted') installBtn.style.display = 'none';
+    deferredPrompt = null;
+  } else {
+    alert("Chrome ga ngedukung instal otomatis.\n\nCara manual: Titik 3 > Instal aplikasi");
+  }
+});
 </script>
 </body>
   </html>
